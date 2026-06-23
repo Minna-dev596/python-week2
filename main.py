@@ -1,35 +1,43 @@
+# python3
 
-from password_engine import PasswordGenerator, InvalidLengthError
+from password_engine import (
+    NumericPinGenerator,
+    MemorablePassphraseGenerator
+)
 
 
-def main():
-    try:
-        length_input = input("Enter password length: ")
+def batch_generate(generators):
+    """
+    Polymorphic execution:
+    Works with any object having .generate()
+    """
+    results = []
 
-        # Convert to integer (may raise ValueError)
-        length = int(length_input)
+    for gen in generators:
+        try:
+            password = gen.generate()
 
-        # Create object
-        app = PasswordGenerator(length)
+            if gen.validate_strength(password):
+                results.append(password)
+            else:
+                raise ValueError("Weak password generated")
 
-        # Generate password
-        result = app.generate_password()
+        except Exception as e:
+            print(f"Error: {e}")
 
-        print("\nResult:", result)
-
-        # Show dunder methods output
-        print("\n__str__:", str(app))
-        print("__repr__:", repr(app))
-
-    except ValueError:
-        print("❌ Invalid input! Please enter a numeric value.")
-
-    except InvalidLengthError as e:
-        print(f"❌ {e}")
-
-    except TypeError as e:
-        print(f"❌ {e}")
+    return results
 
 
 if __name__ == "__main__":
-    main()
+    print("Program started...") 
+    # Create objects (NOT ABC)
+    pin_gen = NumericPinGenerator(6)
+    passphrase_gen = MemorablePassphraseGenerator(4)
+
+    generators = [pin_gen, passphrase_gen]
+
+    results = batch_generate(generators)
+
+    print("\nGenerated Outputs:")
+    for item in results:
+        print(item)

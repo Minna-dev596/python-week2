@@ -1,60 +1,61 @@
 # python3
 
+from abc import ABC, abstractmethod
 import random
 import string
 
 
-# 🔴 Custom Exceptions
-class WeakPasswordError(Exception):
-    """Raised when password length is too short"""
-    pass
+class PasswordGenerator(ABC):
+    """
+    Abstract Base Class (ABC)
+    Defines interface for all generators
+    """
 
-
-class InvalidLengthError(Exception):
-    """Raised when password length is invalid (<= 0)"""
-    pass
-
-
-# 🟢 Main OOP Class
-class PasswordGenerator:
-    def __init__(self, length: int):
-        if not isinstance(length, int):
-            raise TypeError("Length must be an integer")
-
-        if length <= 0:
-            raise InvalidLengthError("Password length must be greater than 0")
-
+    def __init__(self, length=8):
         self.length = length
 
-    # 🔒 Private method (encapsulation)
-    def _generate_pool(self) -> str:
-        return string.ascii_letters + string.digits + string.punctuation
+    @abstractmethod
+    def generate(self):
+        """Generate password"""
+        pass
 
-    # 🔥 Core method with proper error handling
-    def generate_password(self) -> str:
-        try:
-            if self.length < 6:
-                raise WeakPasswordError("Password must be at least 6 characters long")
+    @abstractmethod
+    def validate_strength(self, password):
+        """Validate password strength"""
+        pass
 
-            pool = self._generate_pool()
-            password = ''.join(random.choice(pool) for _ in range(self.length))
 
-        except WeakPasswordError as e:
-            return f"Error: {e}"
+class NumericPinGenerator(PasswordGenerator):
+    """
+    Generates numeric PINs
+    """
 
-        except InvalidLengthError as e:
-            return f"Error: {e}"
+    def __init__(self, length=4):
+        super().__init__(length)
 
-        else:
-            return password
+    def generate(self):
+        pin = ''.join(random.choices(string.digits, k=self.length))
+        return pin
 
-        finally:
-            print("Password generation attempt completed.")
+    def validate_strength(self, password):
+        return len(password) >= 4 and password.isdigit()
 
-    # 🧾 User-friendly output
-    def __str__(self) -> str:
-        return f"PasswordGenerator with length {self.length}"
 
-    # 🧠 Developer/debug output
-    def __repr__(self) -> str:
-        return f"PasswordGenerator(length={self.length})"
+class MemorablePassphraseGenerator(PasswordGenerator):
+    """
+    Generates XKCD-style passphrases
+    """
+
+    def __init__(self, length=4):
+        super().__init__(length)
+        self.word_list = [
+            "apple", "river", "cloud", "tiger",
+            "stone", "green", "happy", "light"
+        ]
+
+    def generate(self):
+        words = random.choices(self.word_list, k=self.length)
+        return "-".join(words)
+
+    def validate_strength(self, password):
+        return len(password.split("-")) >= 3
